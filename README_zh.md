@@ -10,11 +10,12 @@
 2. DLL的dllmain按微软官方定义（大多数都满足）
 3. 不支持用C# 编写的EXE和DLL
 4. 只支持x64
-    
+   
+
 **一种改良型RDI**：
 1. 只支持DLL
 2. 必须在DLL内部编写ReflectiveLoader函数，且导出，当然不一定要将Loader命名为“ReflectiveLoader”，也可以命名为“HahaLoader”
-    
+   
 # 项目结构
 
 Convert2Shellcode
@@ -67,7 +68,7 @@ PS C:\Users\xxxxxxxxxx\Desktop\Conver2Shellcode\bin> .\Convert2Shellcode_front.e
 
 # 更多细节
 
-如果你对实现细节感兴趣，可以去看看我写的这篇文章：
+如果你对实现细节感兴趣，可以去看看我写的这篇文章：[从SRDI原理剖析再到PE2Shellcode的实现-先知社区](https://xz.aliyun.com/news/18239)
 
 我的博客：[关于这个博客 | onedaybook](https://oneday.gitbook.io/onedaybook)
 

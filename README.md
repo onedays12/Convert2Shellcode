@@ -10,7 +10,8 @@ An **embedded RDI** (improved variant) only supports DLL-to-shellcode conversion
 2. DLL's `DllMain` must adhere to Microsoft's official specifications. 
 3. EXEs/DLLs written in C# are unsupported.
 4. x64 architecture only.
-    
+   
+
 **Embedded RDI Specifics**:
 1. DLL-exclusive conversion.
 2. Requires an exported loader function (name flexibility exists, e.g., `HahaLoader`).
@@ -67,7 +68,7 @@ Use runshc64.exe with pe2shellcode for verification：[hasherezade/pe_to_shellco
 
 # For More Details
 
-If you are interested in the implementation details, you can check out this article I wrote：
+If you are interested in the implementation details, you can check out this article I wrote：[从SRDI原理剖析再到PE2Shellcode的实现-先知社区](https://xz.aliyun.com/news/18239)
 
 My blog：[关于这个博客 | onedaybook](https://oneday.gitbook.io/onedaybook)
 
