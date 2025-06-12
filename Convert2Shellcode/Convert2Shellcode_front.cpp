@@ -133,9 +133,9 @@ int wmain(int argc, wchar_t* argv[]) {
     // 检查参数数量
     if (argc < 2) {
         printf("[-] Error: Missing DLL/EXE path parameter\n");
-        printf("[*] Usage: Convert2Shellcode_post.exe <DLL/EXE Path> [Output File Path]\n");
-        printf("[*] Example 1: Convert2Shellcode_post.exe C:\\path\\to\\Test.dll\n");
-        printf("[*] Example 2: Convert2Shellcode_post.exe C:\\path\\to\\ReflectiveDLL.dll C:\\path\\to\\Shellcode.bin\n");
+        printf("[*] Usage: Convert2Shellcode_front.exe <DLL/EXE Path> [Output File Path]\n");
+        printf("[*] Example 1: Convert2Shellcode_front.exe C:\\path\\to\\Test.dll\n");
+        printf("[*] Example 2: Convert2Shellcode_front.exe C:\\path\\to\\ReflectiveDLL.dll C:\\path\\to\\Shellcode.bin\n");
         return 1;
     }
 

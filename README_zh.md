@@ -53,12 +53,20 @@ Test
 
 例子
 ```
-PS C:\Users\xxxxxxxxxx\Desktop\Conver2Shellcode\bin> .\Convert2Shellcode_front.exe mimikatz.exe  
-[+] Successfully opened m  
-[*] File size is 1355264  
-[+] Memory allocation successful, address is 0xc6759040  
-[*] 1355264 bytes read into memory  
-[+] Memory allocation successful, address is 0xc68ba040  
+PS C:\Users\Xxxxxxxx\Desktop\Convert2Shellcode_v1.0> .\Convert2Shellcode_front.exe .\mimikatz.exe
+╔══════════════════════════════════════════════════════════════════════════════════════╗
+║                           Convert2Shellcode_front                                    ║
+║------------------------------------------------------------------------------------- ║
+║ Function: Use front-style RDI to convert EXE/DLL into position-independent shellcode ║
+║ Author：oneday                                                                       ║
+║ Compilation Date：Jun 12 2025 21:29:52                                               ║
+╚══════════════════════════════════════════════════════════════════════════════════════╝
+
+[+] Successfully opened .
+[*] File size is 1355264
+[+] Memory allocation successful, address is 0x4bc9b040
+[*] 1355264 bytes read into memory
+[+] Memory allocation successful, address is 0x4bdf9040
 [+] Successfully generated shellcode file: s (Size: 1356147 bytes)
 ```
 
