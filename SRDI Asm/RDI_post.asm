@@ -6,16 +6,35 @@
 
 .code
 
-main proc	
+main proc
+
+;-------------------------------------------------------------------
+; 保存非易失性寄存器
+;-------------------------------------------------------------------
+	cld	
+	
+	push rbx
+	push rbp
+	push rsi
+	push rdi
+	push r12
+	push r13
+	push r14
+	push r15
+	
+	; [rbp+8] = 旧DOS头地址（基址）
+	; [rbp+16] = 新DOS头地址（基址）
+	; [rbp+24] = 新PE头地址
+	mov rbp,rsp
+	sub rsp,32
+	mov [rbp+8],rcx
+
 ;-------------------------------------------------------------------
 ; [rbp+8] = 旧DOS头地址（基址）
 ; [rbp+16] = 新DOS头地址（基址）
 ; [rbp+24] = 新NT头地址
 ; LoadPEIntoMemory64
 ;-------------------------------------------------------------------
-
-	push rax											; 对齐
-	
     ; 获取 SizeOfImage
     mov rax, [rbp+8]									; 旧DOS头地址
     mov r12d, dword ptr [rax+3Ch]						; PE头RVA（原文件）
@@ -283,29 +302,41 @@ get_next_tlscallback:
 ; GoToEntry
 ;-------------------------------------------------------------------
 entry:
-	mov  rsi, [rbp+24]									; 获取PE头地址
-	mov  ax, word ptr [rsi+16h]							; 读取Characteristics字段
-	test ax, 2000h										; 检查是否为DLL (0x2000)
-	jz   is_exe											; 非DLL则跳转EXE处理
+	mov  rsi, [rbp+24]					; 获取PE头地址
+	mov  ax, word ptr [rsi+16h]			; 读取Characteristics字段
+	test ax, 2000h						; 检查是否为DLL (0x2000)
+	jz   is_exe							; 非DLL则跳转EXE处理
 
 	sub rsp,32
-	mov ebx,dword ptr [rsi + 28h]						; 调用DLL入口点 RVA
-	add rbx,[rbp+16]									; 调用DLL入口点 VA
+	mov ebx,dword ptr [rsi + 28h]		; 调用DLL入口点 RVA
+	add rbx,[rbp+16]					; 调用DLL入口点 VA
 	mov rcx,[rbp+16]
 	mov rdx,1
 	xor r8d,r8d
 	call rbx
 
-	add rsp,40
-	ret
+	add rsp,32
+	jmp restore
 
 is_exe:
-	mov ebx,dword ptr [rsi + 28h]						; 调用EXE入口点 RVA
-	add rbx,[rbp+16]									; 调用EXE入口点 VA
+	mov ebx,dword ptr [rsi + 28h]		; 调用EXE入口点 RVA
+	add rbx,[rbp+16]					; 调用EXE入口点 VA
 	call rbx
-	pop rax
-	ret
 
+;-------------------------------------------------------------------
+; 恢复到调用ReflectiveLoader之前的栈空间和寄存器状态
+;-------------------------------------------------------------------
+restore:
+	add rsp,32
+	pop r15
+	pop r14
+	pop r13
+	pop r12
+	pop rdi
+	pop rsi
+	pop rbp
+	pop rbx
+	ret
 main endp
 
 GetProcAddressByHash proc
