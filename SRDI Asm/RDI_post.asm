@@ -126,10 +126,10 @@ next_entry:
     mov [rax], rbx										; 修正后的值填入原处
 
 get_next_entry:
+	add rsi, 2											; 没有到边界，就移动到下一个重定位项，一个重定位项占16位
 	cmp rcx,rsi											; 判断是否到达了边界值
 	je get_next_block									; 如果到了边界值就下一个重定位块
-    add rsi, 2											; 没有到边界，就移动到下一个重定位项，一个重定位项占16位
-    jmp next_entry					 
+	jmp next_entry				 
 
 get_next_block:
     mov eax, dword ptr [rdx+4]							; 获取当前块大小
