@@ -190,7 +190,7 @@ func main() {
 	finalShellcode := make([]uint8, finalsize)
 	copy(finalShellcode, dllBytes)
 	copy(finalShellcode, bootstrap)
-	finalShellcode = append(finalShellcode, rdiShellcode64...)
+	copy(finalShellcode[len(dllBytes):], rdiShellcode64)
 
 	// 确定输出路径
 	outputPath := "shellcode_post.bin"
